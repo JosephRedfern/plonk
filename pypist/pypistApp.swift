@@ -1,17 +1,131 @@
-//
-//  pypistApp.swift
-//  pypist
-//
-//  Created by Joe Redfern on 02/05/2026.
-//
-
 import SwiftUI
+import Carbon
+import Observation
 
 @main
 struct pypistApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        MenuBarExtra {
+            Button("Show pypist") {
+                appDelegate.togglePanel()
+            }
+            Divider()
+            SettingsLink()
+            Divider()
+            Button("Quit pypist") {
+                NSApp.terminate(nil)
+            }
+        } label: {
+            Image("MenuBarIcon")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 16, height: 16)
+                .accessibilityLabel("pypist")
         }
+        Settings {
+            SettingsView(settings: appDelegate.settings, pythonManager: appDelegate.pythonManager)
+        }
+    }
+}
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    let settings = AppSettings()
+    let pythonManager = PythonManager()
+    private var panel: FloatingPanel!
+    private var hostingView: NSHostingView<ContentView>!
+    private var panelTopY: CGFloat = 0
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        signal(SIGPIPE, SIG_IGN)
+        NSApp.setActivationPolicy(.accessory)
+        setupPanel()
+        setupHotKey()
+        observeContentChanges()
+        pythonManager.start(pythonPath: settings.pythonPath, bootstrap: settings.bootstrapScript)
+    }
+
+    private func setupPanel() {
+        let contentView = ContentView(pythonManager: pythonManager, settings: settings)
+        hostingView = NSHostingView(rootView: contentView)
+
+        let initialHeight: CGFloat = 48
+        panel = FloatingPanel(contentRect: NSRect(x: 0, y: 0, width: 600, height: initialHeight))
+        panel.contentView = hostingView
+
+        if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - 300
+            panelTopY = screenFrame.minY + screenFrame.height * 0.72
+            panel.setFrameOrigin(NSPoint(x: x, y: panelTopY - initialHeight))
+        }
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(panelDidResignKey),
+            name: NSWindow.didResignKeyNotification,
+            object: panel
+        )
+
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 53, event.window === self?.panel {
+                self?.panel.orderOut(nil)
+                return nil
+            }
+            return event
+        }
+    }
+
+    private func setupHotKey() {
+        HotKeyManager.shared.onHotKey = { [weak self] in
+            self?.togglePanel()
+        }
+        // Control + Option + Space
+        HotKeyManager.shared.register(keyCode: 49, modifiers: UInt32(controlKey | optionKey))
+    }
+
+    private func observeContentChanges() {
+        withObservationTracking {
+            _ = pythonManager.history.count
+            _ = pythonManager.lastError
+            _ = pythonManager.isReady
+        } onChange: { [weak self] in
+            DispatchQueue.main.async {
+                self?.observeContentChanges()
+                DispatchQueue.main.async {
+                    self?.updatePanelSize()
+                }
+            }
+        }
+    }
+
+    private func updatePanelSize() {
+        guard panel.isVisible else { return }
+        let idealSize = hostingView.intrinsicContentSize
+        let newHeight = min(max(idealSize.height, 48), 500)
+        var frame = panel.frame
+        frame.size.height = newHeight
+        frame.origin.y = panelTopY - newHeight
+        panel.setFrame(frame, display: true, animate: false)
+    }
+
+    func togglePanel() {
+        if panel.isVisible {
+            panel.orderOut(nil)
+        } else {
+            updatePanelSize()
+            panel.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+
+    @objc private func panelDidResignKey(_ notification: Notification) {
+        panel.orderOut(nil)
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        pythonManager.stop()
+        HotKeyManager.shared.unregister()
     }
 }
