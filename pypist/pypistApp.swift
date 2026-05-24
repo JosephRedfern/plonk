@@ -69,8 +69,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.keyCode == 53, event.window === self?.panel {
-                self?.panel.orderOut(nil)
+            guard let self else { return event }
+            if event.keyCode == 53, event.window === self.panel {
+                self.panel.orderOut(nil)
+                return nil
+            }
+            if event.window === self.panel,
+               event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+               event.charactersIgnoringModifiers == "c" {
+                if let textView = self.panel.firstResponder as? NSTextView,
+                   textView.selectedRange().length > 0 {
+                    return event
+                }
+                let output = self.pythonManager.history.first?.output ?? ""
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(output, forType: .string)
                 return nil
             }
             return event

@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct ContentView: View {
     var pythonManager: PythonManager
@@ -117,8 +118,26 @@ struct ContentView: View {
             pythonManager.clearHistory()
         case "%reset":
             pythonManager.reset(pythonPath: settings.pythonPath, bootstrap: settings.bootstrapScript)
+        case "%copy":
+            copyToClipboard(pythonManager.history.first?.output ?? "")
+        case let cmd where cmd.hasPrefix("%copy "):
+            let expr = String(cmd.dropFirst("%copy ".count)).trimmingCharacters(in: .whitespaces)
+            if expr.isEmpty {
+                copyToClipboard(pythonManager.history.first?.output ?? "")
+            } else {
+                pythonManager.execute("print(\(expr))", silent: true) { entry in
+                    if entry.errorOutput.isEmpty {
+                        copyToClipboard(entry.output)
+                    }
+                }
+            }
         default:
             pythonManager.execute(trimmed)
         }
+    }
+
+    private func copyToClipboard(_ text: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
     }
 }

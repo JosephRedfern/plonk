@@ -152,7 +152,7 @@ final class PythonManager {
         }
     }
 
-    func execute(_ command: String) {
+    func execute(_ command: String, silent: Bool = false, completion: ((HistoryEntry) -> Void)? = nil) {
         guard isReady, let process, process.isRunning,
               let stdinHandle, let stdoutHandle, !isExecuting else { return }
         isExecuting = true
@@ -167,13 +167,17 @@ final class PythonManager {
             usleep(10_000)
             let stderr = self?.drainStderr() ?? ""
             DispatchQueue.main.async {
-                self?.history.insert(HistoryEntry(
+                let entry = HistoryEntry(
                     command: command,
                     output: stdout,
                     errorOutput: stderr,
                     timestamp: Date()
-                ), at: 0)
+                )
+                if !silent || !entry.errorOutput.isEmpty {
+                    self?.history.insert(entry, at: 0)
+                }
                 self?.isExecuting = false
+                completion?(entry)
             }
         }
     }
