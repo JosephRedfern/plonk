@@ -5,5 +5,18 @@
         <link>https://josephredfern.github.io/plonk/appcast.xml</link>
         <description>Most recent changes</description>
         <language>en</language>
+        <item>
+            <title>Plonk 0.2.0</title>
+            <link>https://github.com/JosephRedfern/plonk/releases/tag/v0.2.0</link>
+            <pubDate>Mon, 25 May 2026 12:10:08 +0000</pubDate>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>0.2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.4</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/JosephRedfern/plonk/releases/download/v0.2.0/Plonk-0.2.0.dmg"
+                sparkle:edSignature="0mRxetZ0XzvDGenVgE0aCH7ee148DsEuuE3Q9XcVSoIkidTEEqfx41LvXPJeHFFnX+xZJp9bU5aTPDLuNrOeBA=="
+                length="1875797"
+                type="application/octet-stream" />
+        </item>
     </channel>
 </rss>
