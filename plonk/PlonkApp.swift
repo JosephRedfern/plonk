@@ -8,15 +8,10 @@ struct PlonkApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            Button("Show Plonk") {
-                appDelegate.togglePanel()
-            }
-            Divider()
-            SettingsLink()
-            Divider()
-            Button("Quit Plonk") {
-                NSApp.terminate(nil)
-            }
+            MenuBarContent(
+                updater: appDelegate.updater,
+                onShow: { appDelegate.togglePanel() }
+            )
         } label: {
             Image("MenuBarIcon")
                 .resizable()
@@ -25,7 +20,34 @@ struct PlonkApp: App {
                 .accessibilityLabel("Plonk")
         }
         Settings {
-            SettingsView(settings: appDelegate.settings, pythonManager: appDelegate.pythonManager)
+            SettingsView(
+                settings: appDelegate.settings,
+                pythonManager: appDelegate.pythonManager,
+                updater: appDelegate.updater
+            )
+        }
+    }
+}
+
+private struct MenuBarContent: View {
+    @Bindable var updater: UpdaterManager
+    let onShow: () -> Void
+
+    var body: some View {
+        if let update = updater.availableUpdate {
+            Button("Install Update — v\(update.displayVersionString)") {
+                updater.checkForUpdates()
+            }
+            Divider()
+        }
+        Button("Show Plonk") {
+            onShow()
+        }
+        Divider()
+        SettingsLink()
+        Divider()
+        Button("Quit Plonk") {
+            NSApp.terminate(nil)
         }
     }
 }
@@ -33,6 +55,7 @@ struct PlonkApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     let settings = AppSettings()
     let pythonManager = PythonManager()
+    let updater = UpdaterManager()
     private var panel: FloatingPanel!
     private var hostingView: NSHostingView<ContentView>!
     private var panelTopY: CGFloat = 0

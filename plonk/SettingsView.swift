@@ -4,6 +4,7 @@ import ServiceManagement
 struct SettingsView: View {
     @Bindable var settings: AppSettings
     var pythonManager: PythonManager
+    @Bindable var updater: UpdaterManager
     @State private var launchAtLogin: Bool = SMAppService.mainApp.status == .enabled
 
     var body: some View {
@@ -85,6 +86,34 @@ struct SettingsView: View {
                         .background(.quaternary)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
+            }
+
+            Section("Updates") {
+                HStack {
+                    if let update = updater.availableUpdate {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Update available: v\(update.displayVersionString)")
+                                .fontWeight(.medium)
+                            if let date = update.date {
+                                Text(date, style: .date)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        Spacer()
+                        Button("Install...") {
+                            updater.checkForUpdates()
+                        }
+                    } else {
+                        Text("Plonk is up to date.")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Check for Updates...") {
+                            updater.checkForUpdates()
+                        }
+                    }
+                }
+                Toggle("Automatically check for updates", isOn: $updater.automaticallyChecksForUpdates)
             }
 
             Section {

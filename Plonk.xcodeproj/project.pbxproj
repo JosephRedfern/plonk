@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D812B7EB2FC46EF900969F4F /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = D812B7EA2FC46EF900969F4F /* Sparkle */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		D8895E862FA63D2D00983888 /* Plonk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Plonk.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D812B7EB2FC46EF900969F4F /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = Plonk;
 			packageProductDependencies = (
+				D812B7EA2FC46EF900969F4F /* Sparkle */,
 			);
 			productName = pypist;
 			productReference = D8895E862FA63D2D00983888 /* Plonk.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = D8895E7D2FA63D2D00983888;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D812B7E92FC46EF900969F4F /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D8895E872FA63D2D00983888 /* Products */;
 			projectDirPath = "";
@@ -254,6 +263,9 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
+				INFOPLIST_KEY_SUFeedUrl = "https://josephredfern.github.io/plonk/appcast.xml";
+				INFOPLIST_KEY_SUPublicEDKey = "GZBR4wukLP/ie2yVKHJGgxDrSPNDhrgiaULQsUgOoxE=";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -298,6 +310,9 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
+				INFOPLIST_KEY_SUFeedUrl = "https://josephredfern.github.io/plonk/appcast.xml";
+				INFOPLIST_KEY_SUPublicEDKey = "GZBR4wukLP/ie2yVKHJGgxDrSPNDhrgiaULQsUgOoxE=";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -351,6 +366,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D812B7E92FC46EF900969F4F /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.9.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D812B7EA2FC46EF900969F4F /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D812B7E92FC46EF900969F4F /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D8895E7E2FA63D2D00983888 /* Project object */;
 }

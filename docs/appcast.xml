@@ -1,0 +1,9 @@
+<?xml version="1.0" standalone="yes"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>Plonk Updates</title>
+        <link>https://josephredfern.github.io/plonk/appcast.xml</link>
+        <description>Most recent changes</description>
+        <language>en</language>
+    </channel>
+</rss>

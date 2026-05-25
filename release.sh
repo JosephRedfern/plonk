@@ -14,6 +14,8 @@ EXPORT_PATH="$BUILD_DIR/export"
 APP_PATH="$EXPORT_PATH/$APP_NAME.app"
 ZIP_PATH="$BUILD_DIR/$APP_NAME.zip"
 DMG_PATH="$BUILD_DIR/$APP_NAME.dmg"
+APPCAST_PATH="docs/appcast.xml"
+REPO_SLUG="JosephRedfern/plonk"
 
 RED=$'\033[0;31m'
 GREEN=$'\033[0;32m'
@@ -42,6 +44,17 @@ command -v xcrun >/dev/null      || fail "xcrun not found"
 command -v create-dmg >/dev/null || fail "create-dmg not found — install: brew install create-dmg"
 command -v gh >/dev/null         || fail "gh not found — install: brew install gh"
 command -v git >/dev/null        || fail "git not found"
+
+SIGN_UPDATE="${SPARKLE_SIGN_UPDATE:-$(command -v sign_update 2>/dev/null || true)}"
+if [ -z "$SIGN_UPDATE" ]; then
+    SIGN_UPDATE="$(find "$HOME/Library/Developer/Xcode/DerivedData" -name sign_update -type f -perm -u+x 2>/dev/null | head -1 || true)"
+fi
+[ -n "$SIGN_UPDATE" ] && [ -x "$SIGN_UPDATE" ] || fail "sign_update not found.
+
+Sparkle ships sign_update inside its SPM artifact bundle. After Sparkle is added to the project, build once, then either:
+  • set SPARKLE_SIGN_UPDATE=/path/to/sign_update before running, or
+  • symlink it onto your PATH, e.g.
+      ln -s \"\$(find ~/Library/Developer/Xcode/DerivedData -name sign_update -type f | head -1)\" /usr/local/bin/sign_update"
 
 if ! xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
     fail "notarytool keychain profile '$NOTARY_PROFILE' not found.
@@ -76,11 +89,11 @@ NEW_BUILD=$((CURRENT_BUILD + 1))
 
 info "Version: $VERSION (build $CURRENT_BUILD → $NEW_BUILD)"
 
-revert_pbxproj() {
-    warn "Reverting pbxproj changes."
-    git checkout -- "$PBXPROJ" 2>/dev/null || true
+cleanup_on_error() {
+    warn "Reverting pbxproj + appcast changes."
+    git checkout -- "$PBXPROJ" "$APPCAST_PATH" 2>/dev/null || true
 }
-trap revert_pbxproj ERR
+trap cleanup_on_error ERR
 
 info "Updating MARKETING_VERSION and CURRENT_PROJECT_VERSION in $PBXPROJ..."
 sed -i '' -E "s/MARKETING_VERSION = [^;]+;/MARKETING_VERSION = $VERSION;/g" "$PBXPROJ"
@@ -128,10 +141,47 @@ create-dmg \
     "$DMG_VERSIONED" \
     "$APP_PATH"
 
+info "Signing DMG with Sparkle EdDSA key..."
+SIGN_OUTPUT="$("$SIGN_UPDATE" "$DMG_VERSIONED")"
+ED_SIGNATURE="$(printf '%s' "$SIGN_OUTPUT" | sed -nE 's/.*sparkle:edSignature="([^"]+)".*/\1/p')"
+DMG_LENGTH="$(printf '%s' "$SIGN_OUTPUT" | sed -nE 's/.*length="([^"]+)".*/\1/p')"
+[ -n "$ED_SIGNATURE" ] && [ -n "$DMG_LENGTH" ] || fail "sign_update produced unexpected output: $SIGN_OUTPUT"
+
+info "Regenerating $APPCAST_PATH..."
+MIN_OS="$(awk '/MACOSX_DEPLOYMENT_TARGET = / { gsub(";","",$3); print $3; exit }' "$PBXPROJ")"
+PUBDATE="$(date -u +"%a, %d %b %Y %H:%M:%S +0000")"
+DOWNLOAD_URL="https://github.com/$REPO_SLUG/releases/download/$TAG/$APP_NAME-$VERSION.dmg"
+RELEASE_NOTES_URL="https://github.com/$REPO_SLUG/releases/tag/$TAG"
+
+cat > "$APPCAST_PATH" <<EOF
+<?xml version="1.0" standalone="yes"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>Plonk Updates</title>
+        <link>https://josephredfern.github.io/plonk/appcast.xml</link>
+        <description>Most recent changes</description>
+        <language>en</language>
+        <item>
+            <title>Plonk $VERSION</title>
+            <link>$RELEASE_NOTES_URL</link>
+            <pubDate>$PUBDATE</pubDate>
+            <sparkle:version>$NEW_BUILD</sparkle:version>
+            <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>$MIN_OS</sparkle:minimumSystemVersion>
+            <enclosure
+                url="$DOWNLOAD_URL"
+                sparkle:edSignature="$ED_SIGNATURE"
+                length="$DMG_LENGTH"
+                type="application/octet-stream" />
+        </item>
+    </channel>
+</rss>
+EOF
+
 trap - ERR
 
-info "Committing version bump and tagging $TAG..."
-git add "$PBXPROJ"
+info "Committing version bump, appcast, and tagging $TAG..."
+git add "$PBXPROJ" "$APPCAST_PATH"
 git commit -m "Release $TAG"
 git tag -a "$TAG" -m "Release $TAG"
 
@@ -145,3 +195,4 @@ gh release create "$TAG" "$DMG_VERSIONED" \
     --generate-notes
 
 info "Done. Shipped $TAG: $DMG_VERSIONED"
+info "Appcast: https://josephredfern.github.io/plonk/appcast.xml"
