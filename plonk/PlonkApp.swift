@@ -1,6 +1,7 @@
 import SwiftUI
 import Carbon
 import Observation
+import Sparkle
 
 @main
 struct PlonkApp: App {

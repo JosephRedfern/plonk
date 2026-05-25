@@ -263,9 +263,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
-				INFOPLIST_KEY_SUFeedUrl = "https://josephredfern.github.io/plonk/appcast.xml";
-				INFOPLIST_KEY_SUPublicEDKey = "GZBR4wukLP/ie2yVKHJGgxDrSPNDhrgiaULQsUgOoxE=";
+				INFOPLIST_FILE = plonk/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -310,9 +308,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
-				INFOPLIST_KEY_SUFeedUrl = "https://josephredfern.github.io/plonk/appcast.xml";
-				INFOPLIST_KEY_SUPublicEDKey = "GZBR4wukLP/ie2yVKHJGgxDrSPNDhrgiaULQsUgOoxE=";
+				INFOPLIST_FILE = plonk/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

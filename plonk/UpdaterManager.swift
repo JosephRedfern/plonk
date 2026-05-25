@@ -3,8 +3,9 @@ import Observation
 import Sparkle
 
 @Observable
-final class UpdaterManager: NSObject, SPUUpdaterDelegate {
+final class UpdaterManager {
     @ObservationIgnored private let controller: SPUStandardUpdaterController
+    @ObservationIgnored private let delegate: UpdaterDelegate
 
     var availableUpdate: SUAppcastItem?
     var automaticallyChecksForUpdates: Bool {
@@ -13,28 +14,39 @@ final class UpdaterManager: NSObject, SPUUpdaterDelegate {
         }
     }
 
-    override init() {
+    init() {
+        let delegate = UpdaterDelegate()
         let c = SPUStandardUpdaterController(
             startingUpdater: false,
-            updaterDelegate: nil,
+            updaterDelegate: delegate,
             userDriverDelegate: nil
         )
+        self.delegate = delegate
         self.controller = c
         self.automaticallyChecksForUpdates = c.updater.automaticallyChecksForUpdates
-        super.init()
-        c.updater.delegate = self
+        delegate.onFoundUpdate = { [weak self] item in
+            self?.availableUpdate = item
+        }
+        delegate.onNoUpdate = { [weak self] in
+            self?.availableUpdate = nil
+        }
         c.startUpdater()
     }
 
     func checkForUpdates() {
         controller.checkForUpdates(nil)
     }
+}
+
+private final class UpdaterDelegate: NSObject, SPUUpdaterDelegate {
+    var onFoundUpdate: ((SUAppcastItem) -> Void)?
+    var onNoUpdate: (() -> Void)?
 
     func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
-        availableUpdate = item
+        onFoundUpdate?(item)
     }
 
     func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
-        availableUpdate = nil
+        onNoUpdate?()
     }
 }

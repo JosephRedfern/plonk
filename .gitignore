@@ -12,6 +12,10 @@ DerivedData/
 *.dSYM.zip
 *.dSYM
 
+# SwiftPM CLI
+.swiftpm/
+.build/
+
 # Release artefacts
 *.dmg
 *.zip

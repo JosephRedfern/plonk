@@ -1,5 +1,6 @@
 import SwiftUI
 import ServiceManagement
+import Sparkle
 
 struct SettingsView: View {
     @Bindable var settings: AppSettings
