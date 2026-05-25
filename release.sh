@@ -27,12 +27,27 @@ info() { printf "%s→%s %s\n" "$GREEN" "$NC" "$1"; }
 warn() { printf "%s!%s %s\n" "$YELLOW" "$NC" "$1"; }
 fail() { printf "%s✗%s %s\n" "$RED" "$NC" "$1" >&2; exit 1; }
 
-if [ $# -gt 1 ]; then
-    printf "Usage: %s [version]   omit for auto-bump from conventional commits, or e.g. %s 1.2.0\n" "$0" "$0" >&2
-    exit 1
-fi
+usage() {
+    printf "Usage: %s [--yes|-y] [version]\n" "$0"
+    printf "  --yes, -y    skip the release-notes confirmation prompt\n"
+    printf "  version      e.g. 1.2.0; omit for auto-bump from conventional commits\n"
+}
 
-VERSION="${1:-}"
+ASSUME_YES=0
+VERSION=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -y|--yes) ASSUME_YES=1; shift ;;
+        -h|--help) usage; exit 0 ;;
+        --) shift; break ;;
+        -*) usage >&2; fail "Unknown flag: $1" ;;
+        *)
+            [ -z "$VERSION" ] || { usage >&2; fail "Too many positional arguments"; }
+            VERSION="$1"
+            shift
+            ;;
+    esac
+done
 
 command -v xcodebuild >/dev/null || fail "xcodebuild not found"
 command -v xcrun >/dev/null      || fail "xcrun not found"
@@ -106,6 +121,29 @@ NEW_BUILD=$((CURRENT_BUILD + 1))
 
 info "Version: $VERSION (build $CURRENT_BUILD → $NEW_BUILD)"
 
+rm -rf "$BUILD_DIR"
+mkdir -p "$BUILD_DIR"
+
+info "Generating release notes preview..."
+NOTES_MD="$BUILD_DIR/notes.md"
+git-cliff --tag "$TAG" --unreleased --strip all -o "$NOTES_MD"
+[ -s "$NOTES_MD" ] || fail "git-cliff produced empty notes"
+
+printf "\n%s━━━ Release notes for %s ━━━%s\n" "$GREEN" "$TAG" "$NC"
+cat "$NOTES_MD"
+printf "%s━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n\n" "$GREEN" "$NC"
+
+if [ "$ASSUME_YES" = "1" ]; then
+    info "Proceeding without confirmation (--yes)."
+else
+    printf "Proceed with release? [y/N] "
+    read -r REPLY
+    case "$REPLY" in
+        [yY]|[yY][eE][sS]) ;;
+        *) info "Aborted — no changes made."; exit 0 ;;
+    esac
+fi
+
 CHANGELOG_PRE_EXISTING=0
 [ -f "$CHANGELOG_PATH" ] && CHANGELOG_PRE_EXISTING=1
 
@@ -119,12 +157,6 @@ cleanup_on_error() {
     fi
 }
 trap cleanup_on_error ERR
-
-info "Generating release notes from conventional commits..."
-mkdir -p "$BUILD_DIR"
-NOTES_MD="$BUILD_DIR/notes.md"
-git-cliff --tag "$TAG" --unreleased --strip all -o "$NOTES_MD"
-[ -s "$NOTES_MD" ] || fail "git-cliff produced empty notes"
 
 git-cliff --tag "$TAG" --unreleased --prepend "$CHANGELOG_PATH" >/dev/null
 
@@ -143,9 +175,6 @@ NOTES_HTML="$(md_to_html < "$NOTES_MD")"
 info "Updating MARKETING_VERSION and CURRENT_PROJECT_VERSION in $PBXPROJ..."
 sed -i '' -E "s/MARKETING_VERSION = [^;]+;/MARKETING_VERSION = $VERSION;/g" "$PBXPROJ"
 sed -i '' -E "s/CURRENT_PROJECT_VERSION = [^;]+;/CURRENT_PROJECT_VERSION = $NEW_BUILD;/g" "$PBXPROJ"
-
-rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
 
 info "Archiving $SCHEME..."
 xcodebuild archive \
