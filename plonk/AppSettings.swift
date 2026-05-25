@@ -40,8 +40,8 @@ final class AppSettings {
         useMode = PythonMode(rawValue: defaults.string(forKey: "useMode") ?? "") ?? .pythonInterpreter
         hotKeyCode = (defaults.object(forKey: "hotKeyCode") as? Int).map { UInt32($0) } ?? 49
         hotKeyModifiers = (defaults.object(forKey: "hotKeyModifiers") as? Int).map { UInt32($0) }
-            ?? UInt32(optionKey | cmdKey)
-        hotKeyDisplay = defaults.string(forKey: "hotKeyDisplay") ?? "⌥⌘ Space"
+            ?? UInt32(controlKey | optionKey)
+        hotKeyDisplay = defaults.string(forKey: "hotKeyDisplay") ?? "⌃⌥ Space"
     }
 
     var effectivePythonPath: String {
