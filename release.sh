@@ -15,6 +15,7 @@ APP_PATH="$EXPORT_PATH/$APP_NAME.app"
 ZIP_PATH="$BUILD_DIR/$APP_NAME.zip"
 DMG_PATH="$BUILD_DIR/$APP_NAME.dmg"
 APPCAST_PATH="docs/appcast.xml"
+CHANGELOG_PATH="CHANGELOG.md"
 REPO_SLUG="JosephRedfern/plonk"
 
 RED=$'\033[0;31m'
@@ -26,24 +27,40 @@ info() { printf "%s→%s %s\n" "$GREEN" "$NC" "$1"; }
 warn() { printf "%s!%s %s\n" "$YELLOW" "$NC" "$1"; }
 fail() { printf "%s✗%s %s\n" "$RED" "$NC" "$1" >&2; exit 1; }
 
-if [ $# -ne 1 ]; then
-    printf "Usage: %s <version>   e.g. %s 1.2.0\n" "$0" "$0" >&2
+if [ $# -gt 1 ]; then
+    printf "Usage: %s [version]   omit for auto-bump from conventional commits, or e.g. %s 1.2.0\n" "$0" "$0" >&2
     exit 1
 fi
 
-VERSION="$1"
+VERSION="${1:-}"
+
+command -v xcodebuild >/dev/null || fail "xcodebuild not found"
+command -v xcrun >/dev/null      || fail "xcrun not found"
+command -v create-dmg >/dev/null || fail "create-dmg not found — install: brew install create-dmg"
+command -v gh >/dev/null         || fail "gh not found — install: brew install gh"
+command -v git-cliff >/dev/null  || fail "git-cliff not found — install: brew install git-cliff"
+command -v git >/dev/null        || fail "git not found"
+
+LAST_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+
+if [ -z "$VERSION" ]; then
+    BUMPED="$(git-cliff --bumped-version 2>/dev/null | tr -d '[:space:]')"
+    [ -n "$BUMPED" ] || fail "git-cliff could not determine the next version.
+Make at least one conventional commit (feat:/fix:/...) since $LAST_TAG, or pass a version explicitly."
+    if [ "$BUMPED" = "$LAST_TAG" ]; then
+        fail "git-cliff did not bump — no conventional commits since $LAST_TAG.
+Add a feat:/fix:/... commit, or pass a version explicitly."
+    fi
+    VERSION="${BUMPED#v}"
+    info "Auto-bumped version: $VERSION (was $LAST_TAG)"
+fi
+
 TAG="v$VERSION"
 DMG_VERSIONED="$BUILD_DIR/$APP_NAME-$VERSION.dmg"
 
 if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
     fail "Version must look like 1.2 or 1.2.3 (got '$VERSION')"
 fi
-
-command -v xcodebuild >/dev/null || fail "xcodebuild not found"
-command -v xcrun >/dev/null      || fail "xcrun not found"
-command -v create-dmg >/dev/null || fail "create-dmg not found — install: brew install create-dmg"
-command -v gh >/dev/null         || fail "gh not found — install: brew install gh"
-command -v git >/dev/null        || fail "git not found"
 
 SIGN_UPDATE="${SPARKLE_SIGN_UPDATE:-$(command -v sign_update 2>/dev/null || true)}"
 if [ -z "$SIGN_UPDATE" ]; then
@@ -89,11 +106,39 @@ NEW_BUILD=$((CURRENT_BUILD + 1))
 
 info "Version: $VERSION (build $CURRENT_BUILD → $NEW_BUILD)"
 
+CHANGELOG_PRE_EXISTING=0
+[ -f "$CHANGELOG_PATH" ] && CHANGELOG_PRE_EXISTING=1
+
 cleanup_on_error() {
-    warn "Reverting pbxproj + appcast changes."
+    warn "Reverting pbxproj + appcast + CHANGELOG changes."
     git checkout -- "$PBXPROJ" "$APPCAST_PATH" 2>/dev/null || true
+    if [ "$CHANGELOG_PRE_EXISTING" = "1" ]; then
+        git checkout -- "$CHANGELOG_PATH" 2>/dev/null || true
+    else
+        rm -f "$CHANGELOG_PATH"
+    fi
 }
 trap cleanup_on_error ERR
+
+info "Generating release notes from conventional commits..."
+mkdir -p "$BUILD_DIR"
+NOTES_MD="$BUILD_DIR/notes.md"
+git-cliff --tag "$TAG" --unreleased --strip all -o "$NOTES_MD"
+[ -s "$NOTES_MD" ] || fail "git-cliff produced empty notes"
+
+git-cliff --tag "$TAG" --unreleased --prepend "$CHANGELOG_PATH" >/dev/null
+
+md_to_html() {
+    sed -E 's/\*\*([^*]+)\*\*/<strong>\1<\/strong>/g; s/`([^`]+)`/<code>\1<\/code>/g' \
+    | awk '
+        /^### / { if (in_ul) { print "</ul>"; in_ul=0 } sub(/^### /, ""); print "<h3>" $0 "</h3>"; next }
+        /^- /   { if (!in_ul) { print "<ul>"; in_ul=1 } sub(/^- /, ""); print "<li>" $0 "</li>"; next }
+        /^$/    { if (in_ul) { print "</ul>"; in_ul=0 } next }
+                { if (in_ul) { print "</ul>"; in_ul=0 } print }
+        END     { if (in_ul) print "</ul>" }
+    '
+}
+NOTES_HTML="$(md_to_html < "$NOTES_MD")"
 
 info "Updating MARKETING_VERSION and CURRENT_PROJECT_VERSION in $PBXPROJ..."
 sed -i '' -E "s/MARKETING_VERSION = [^;]+;/MARKETING_VERSION = $VERSION;/g" "$PBXPROJ"
@@ -168,6 +213,9 @@ cat > "$APPCAST_PATH" <<EOF
             <sparkle:version>$NEW_BUILD</sparkle:version>
             <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>$MIN_OS</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+$NOTES_HTML
+]]></description>
             <enclosure
                 url="$DOWNLOAD_URL"
                 sparkle:edSignature="$ED_SIGNATURE"
@@ -180,9 +228,9 @@ EOF
 
 trap - ERR
 
-info "Committing version bump, appcast, and tagging $TAG..."
-git add "$PBXPROJ" "$APPCAST_PATH"
-git commit -m "Release $TAG"
+info "Committing version bump, appcast, CHANGELOG, and tagging $TAG..."
+git add "$PBXPROJ" "$APPCAST_PATH" "$CHANGELOG_PATH"
+git commit -m "chore(release): $TAG"
 git tag -a "$TAG" -m "Release $TAG"
 
 info "Pushing to origin..."
@@ -192,7 +240,7 @@ git push origin "$TAG"
 info "Creating GitHub release..."
 gh release create "$TAG" "$DMG_VERSIONED" \
     --title "$TAG" \
-    --generate-notes
+    --notes-file "$NOTES_MD"
 
 info "Done. Shipped $TAG: $DMG_VERSIONED"
 info "Appcast: https://josephredfern.github.io/plonk/appcast.xml"

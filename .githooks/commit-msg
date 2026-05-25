@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Enforce Conventional Commits — see https://www.conventionalcommits.org
+#
+# Allowed types match cliff.toml:
+#   feat, fix, perf, refactor, docs, test, build, ci, chore
+#
+# Format: type(optional-scope)!: subject
+# Examples:
+#   feat: add hotkey recorder to settings
+#   fix(updater): handle nil release notes
+#   refactor!: drop legacy bootstrap path
+
+set -euo pipefail
+
+msg_file="$1"
+first_line="$(sed -n '1p' "$msg_file")"
+
+# Allow git's own auto-generated messages through.
+case "$first_line" in
+    "Merge "*|"Revert "*|"fixup! "*|"squash! "*|"amend! "*) exit 0 ;;
+esac
+
+pattern='^(feat|fix|perf|refactor|docs|test|build|ci|chore)(\([^)]+\))?!?: .+'
+
+if ! [[ "$first_line" =~ $pattern ]]; then
+    {
+        printf '\n\033[0;31m✗\033[0m Commit message does not follow Conventional Commits.\n\n'
+        printf '   Got:      %s\n' "$first_line"
+        printf '   Expected: <type>(<scope>)!?: <subject>\n\n'
+        printf '   Types:    feat, fix, perf, refactor, docs, test, build, ci, chore\n'
+        printf '   Examples: feat: add hotkey recorder\n'
+        printf '             fix(updater): handle nil notes\n'
+        printf '             refactor!: drop legacy path\n\n'
+        printf '   Bypass once with: git commit --no-verify\n\n'
+    } >&2
+    exit 1
+fi
