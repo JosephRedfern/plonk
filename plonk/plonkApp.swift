@@ -3,18 +3,18 @@ import Carbon
 import Observation
 
 @main
-struct pypistApp: App {
+struct plonkApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
         MenuBarExtra {
-            Button("Show pypist") {
+            Button("Show plonk") {
                 appDelegate.togglePanel()
             }
             Divider()
             SettingsLink()
             Divider()
-            Button("Quit pypist") {
+            Button("Quit plonk") {
                 NSApp.terminate(nil)
             }
         } label: {
@@ -22,7 +22,7 @@ struct pypistApp: App {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 16, height: 16)
-                .accessibilityLabel("pypist")
+                .accessibilityLabel("plonk")
         }
         Settings {
             SettingsView(settings: appDelegate.settings, pythonManager: appDelegate.pythonManager)

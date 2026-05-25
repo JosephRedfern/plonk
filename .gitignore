@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Xcode build & user state
+build/
+DerivedData/
+*.xcuserstate
+**/xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Release artefacts
+*.dmg
+*.zip
+*.xcarchive

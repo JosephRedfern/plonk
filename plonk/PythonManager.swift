@@ -21,7 +21,7 @@ final class PythonManager {
     private var stdinHandle: FileHandle?
     private var stdoutHandle: FileHandle?
     private var stderrHandle: FileHandle?
-    private let marker = "---PYPIST_DONE---"
+    private let marker = "---PLONK_DONE---"
     private var stderrAccumulator = ""
     private let stderrLock = NSLock()
 
@@ -70,7 +70,7 @@ final class PythonManager {
         }
 
         let scriptURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("pypist_executor.py")
+            .appendingPathComponent("plonk_executor.py")
         do {
             try Self.executorScript.write(to: scriptURL, atomically: true, encoding: .utf8)
         } catch {
@@ -84,7 +84,7 @@ final class PythonManager {
         var args = ["-u", scriptURL.path]
         if !bootstrap.isEmpty {
             let bootstrapURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent("pypist_bootstrap.py")
+                .appendingPathComponent("plonk_bootstrap.py")
             try? bootstrap.write(to: bootstrapURL, atomically: true, encoding: .utf8)
             args.append(bootstrapURL.path)
         }
@@ -95,7 +95,7 @@ final class PythonManager {
             let venvBin = (venvDir as NSString).appendingPathComponent("bin")
             env["VIRTUAL_ENV"] = venvDir
             env["PATH"] = venvBin + ":" + (env["PATH"] ?? "/usr/bin:/bin")
-            env["PYPIST_PROJECT_DIR"] = (venvDir as NSString).deletingLastPathComponent
+            env["PLONK_PROJECT_DIR"] = (venvDir as NSString).deletingLastPathComponent
         }
         process.currentDirectoryURL = URL(fileURLWithPath: NSHomeDirectory())
         process.environment = env
@@ -237,7 +237,7 @@ final class PythonManager {
     static let executorScript = """
 import sys, traceback, io, subprocess, os
 
-MARKER = "---PYPIST_DONE---"
+MARKER = "---PLONK_DONE---"
 
 if sys.prefix != sys.base_prefix:
     venv_bin = os.path.join(sys.prefix, "bin")
@@ -262,7 +262,7 @@ while True:
             cmd = line[1:]
             cwd = None
             if cmd.strip().startswith("uv "):
-                cwd = os.environ.get("PYPIST_PROJECT_DIR")
+                cwd = os.environ.get("PLONK_PROJECT_DIR")
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, executable=os.environ.get("SHELL", "/bin/sh"), cwd=cwd)
             if result.stdout:
                 print(result.stdout, end="", flush=True)
@@ -280,12 +280,12 @@ while True:
         try:
             code = None
             try:
-                code = compile(line, "<pypist>", "eval")
+                code = compile(line, "<plonk>", "eval")
             except SyntaxError:
                 pass
             if code is None:
                 try:
-                    code = compile(line, "<pypist>", "exec")
+                    code = compile(line, "<plonk>", "exec")
                 except SyntaxError:
                     traceback.print_exc()
             if code is not None:

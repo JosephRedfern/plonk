@@ -1,10 +1,10 @@
-# pypist
+# plonk
 
 A Spotlight-style floating Python REPL for macOS. Hit a hotkey, get a Python prompt anywhere.
 
 ## What it does
 
-pypist lives in your menu bar and pops up a floating REPL panel on a global hotkey. Behind the scenes it runs a long-lived Python interpreter subprocess, so state (variables, imports) persists between commands until you reset it.
+plonk lives in your menu bar and pops up a floating REPL panel on a global hotkey. Behind the scenes it runs a long-lived Python interpreter subprocess, so state (variables, imports) persists between commands until you reset it.
 
 ## Usage
 
@@ -33,7 +33,7 @@ pypist lives in your menu bar and pops up a floating REPL panel on a global hotk
 
 Open from the menu bar icon → Settings.
 
-- **Python Interpreter:** path to the `python3` binary you want to use. pypist auto-detects a parent virtualenv (looks upward for a `pyvenv.cfg`) and sets `VIRTUAL_ENV` / `PATH` accordingly.
+- **Python Interpreter:** path to the `python3` binary you want to use. plonk auto-detects a parent virtualenv (looks upward for a `pyvenv.cfg`) and sets `VIRTUAL_ENV` / `PATH` accordingly.
 - **Bootstrap Script:** Python code that runs on interpreter startup. Useful for default imports.
 - **Restart Interpreter:** kill and relaunch the subprocess with the current settings.
 
@@ -51,7 +51,33 @@ The app sandbox is **disabled** — required for the global hotkey and for spawn
 
 ## Building
 
-Open `pypist.xcodeproj` in Xcode and build. Requires macOS 14+ (uses `@Observable`, `MenuBarExtra`, etc.).
+Open `plonk.xcodeproj` in Xcode and build. Requires macOS 14+ (uses `@Observable`, `MenuBarExtra`, etc.).
+
+## Releasing
+
+`release.sh` runs archive → sign → notarize → staple → DMG in one shot. Output lands in `build/plonk.dmg`.
+
+One-time setup:
+
+```sh
+# Install create-dmg
+brew install create-dmg
+
+# Store notary credentials in the keychain (uses an app-specific password
+# from appleid.apple.com → Sign-In and Security → App-Specific Passwords)
+xcrun notarytool store-credentials "plonk-notary" \
+  --apple-id <your-apple-id> \
+  --team-id V2CW6Y3N5J \
+  --password <app-specific-password>
+```
+
+Then:
+
+```sh
+./release.sh
+```
+
+Signing identity comes from your Developer ID Application certificate in the keychain (Xcode → Settings → Accounts → Manage Certificates).
 
 ## Credits
 

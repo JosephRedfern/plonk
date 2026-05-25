@@ -32,7 +32,7 @@ struct SettingsView: View {
 
             Section("Keyboard Shortcut") {
                 HStack {
-                    Text("Toggle pypist:")
+                    Text("Toggle plonk:")
                     Spacer()
                     Text("⌃⌥ Space")
                         .padding(.horizontal, 8)
