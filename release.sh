@@ -168,7 +168,9 @@ md_to_html() {
     sed -E 's/\*\*([^*]+)\*\*/<strong>\1<\/strong>/g; s/`([^`]+)`/<code>\1<\/code>/g' \
     | awk '
         /^### / { if (in_ul) { print "</ul>"; in_ul=0 } sub(/^### /, ""); print "<h3>" $0 "</h3>"; next }
-        /^- /   { if (!in_ul) { print "<ul>"; in_ul=1 } sub(/^- /, ""); print "<li>" $0 "</li>"; next }
+        /^## /  { if (in_ul) { print "</ul>"; in_ul=0 } sub(/^## /, "");  print "<h2>" $0 "</h2>"; next }
+        /^# /   { if (in_ul) { print "</ul>"; in_ul=0 } sub(/^# /, "");   print "<h1>" $0 "</h1>"; next }
+        /^- /   { if (!in_ul) { print "<ul>"; in_ul=1 } sub(/^- /, "");   print "<li>" $0 "</li>"; next }
         /^$/    { if (in_ul) { print "</ul>"; in_ul=0 } next }
                 { if (in_ul) { print "</ul>"; in_ul=0 } print }
         END     { if (in_ul) print "</ul>" }

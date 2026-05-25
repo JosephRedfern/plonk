@@ -13,7 +13,7 @@
             <sparkle:shortVersionString>0.3.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.4</sparkle:minimumSystemVersion>
             <description><![CDATA[
-## [0.3.0] — 2026-05-25
+<h2> [0.3.0] — 2026-05-25 </h2>
 <h3>Features</h3>
 <ul>
 <li>Allow custom hot-key to be specified</li>
