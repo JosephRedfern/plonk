@@ -30,16 +30,8 @@ sort_commits = "oldest"
 tag_pattern = "v[0-9]+\\.[0-9]+(\\.[0-9]+)?"
 
 commit_parsers = [
-    { message = "^chore\\(release\\)", skip = true },
-    { message = "^Release ",            skip = true },
     { message = "^feat",     group = "Features" },
     { message = "^fix",      group = "Bug Fixes" },
     { message = "^perf",     group = "Performance" },
-    { message = "^refactor", group = "Refactor" },
-    { message = "^docs",     group = "Documentation" },
-    { message = "^test",     group = "Tests" },
-    { message = "^build",    group = "Build" },
-    { message = "^ci",       group = "CI" },
-    { message = "^chore",    group = "Chore" },
-    { message = ".*",        group = "Other" },
+    { message = ".*",        skip = true },
 ]
