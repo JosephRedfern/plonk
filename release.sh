@@ -158,7 +158,11 @@ cleanup_on_error() {
 }
 trap cleanup_on_error ERR
 
-git-cliff --tag "$TAG" --unreleased --prepend "$CHANGELOG_PATH" >/dev/null
+if [ -f "$CHANGELOG_PATH" ]; then
+    git-cliff --tag "$TAG" --unreleased --prepend "$CHANGELOG_PATH" >/dev/null
+else
+    git-cliff --tag "$TAG" --unreleased -o "$CHANGELOG_PATH" >/dev/null
+fi
 
 md_to_html() {
     sed -E 's/\*\*([^*]+)\*\*/<strong>\1<\/strong>/g; s/`([^`]+)`/<code>\1<\/code>/g' \
