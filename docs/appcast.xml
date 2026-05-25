@@ -6,23 +6,23 @@
         <description>Most recent changes</description>
         <language>en</language>
         <item>
-            <title>Plonk 0.3.0</title>
-            <link>https://github.com/JosephRedfern/plonk/releases/tag/v0.3.0</link>
-            <pubDate>Mon, 25 May 2026 13:55:01 +0000</pubDate>
-            <sparkle:version>5</sparkle:version>
-            <sparkle:shortVersionString>0.3.0</sparkle:shortVersionString>
+            <title>Plonk 0.3.1</title>
+            <link>https://github.com/JosephRedfern/plonk/releases/tag/v0.3.1</link>
+            <pubDate>Mon, 25 May 2026 17:04:15 +0000</pubDate>
+            <sparkle:version>6</sparkle:version>
+            <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.4</sparkle:minimumSystemVersion>
             <description><![CDATA[
-<h2> [0.3.0] — 2026-05-25 </h2>
-<h3>Features</h3>
+<h2>[0.3.1] — 2026-05-25</h2>
+<h3>Bug Fixes</h3>
 <ul>
-<li>Allow custom hot-key to be specified</li>
+<li>Use interpeter mode by default so Plonk works OOTB</li>
 </ul>
 ]]></description>
             <enclosure
-                url="https://github.com/JosephRedfern/plonk/releases/download/v0.3.0/Plonk-0.3.0.dmg"
-                sparkle:edSignature="1ZucB29f2QDoELA+u8DLnppF5nWl5SnQ0uTvUQM/h0g/qmJf3L0BoTYOl4dyORt3FwG6YHzlvC5RffGhvlj4AQ=="
-                length="1888343"
+                url="https://github.com/JosephRedfern/plonk/releases/download/v0.3.1/Plonk-0.3.1.dmg"
+                sparkle:edSignature="tSVW2GdSuh4f1DdLizG6D2HmPLbgr3EI5r+AtQWZ7jhnCDm5XDqD0yRTGkBGjJA0FGWRjgMdFvHRA2UcszTgBA=="
+                length="1888355"
                 type="application/octet-stream" />
         </item>
     </channel>
