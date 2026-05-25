@@ -2,6 +2,8 @@
 
 A Spotlight-style floating Python REPL for macOS. Hit a hotkey, get a Python prompt anywhere.
 
+![demo gif, showing basic functionality of Plonk](docs/demo.gif)
+
 ## What it does
 
 Plonk lives in your menu bar and pops up a floating REPL panel on a global hotkey. Behind the scenes it runs a long-lived Python interpreter subprocess, so state (variables, imports) persists between commands until you reset it.
