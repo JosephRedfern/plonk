@@ -37,7 +37,7 @@ final class AppSettings {
         pythonPath = defaults.string(forKey: "pythonPath") ?? "/usr/bin/python3"
         bootstrapScript = defaults.string(forKey: "bootstrapScript") ?? ""
         projectDir = defaults.string(forKey: "projectDir") ?? ""
-        useMode = PythonMode(rawValue: defaults.string(forKey: "useMode") ?? "") ?? .projectDirectory
+        useMode = PythonMode(rawValue: defaults.string(forKey: "useMode") ?? "") ?? .pythonInterpreter
         hotKeyCode = (defaults.object(forKey: "hotKeyCode") as? Int).map { UInt32($0) } ?? 49
         hotKeyModifiers = (defaults.object(forKey: "hotKeyModifiers") as? Int).map { UInt32($0) }
             ?? UInt32(optionKey | cmdKey)

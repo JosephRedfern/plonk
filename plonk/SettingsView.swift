@@ -15,8 +15,8 @@ struct SettingsView: View {
         Form {
             Section("Python") {
                 Picker("", selection: $settings.useMode) {
-                    Text("Project Directory").tag(PythonMode.projectDirectory)
                     Text("Python Interpreter").tag(PythonMode.pythonInterpreter)
+                    Text("Project Directory").tag(PythonMode.projectDirectory)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
