@@ -118,8 +118,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         HotKeyManager.shared.onHotKey = { [weak self] in
             self?.togglePanel()
         }
-        // Control + Option + Space
-        HotKeyManager.shared.register(keyCode: 49, modifiers: UInt32(controlKey | optionKey))
+        HotKeyManager.shared.register(keyCode: settings.hotKeyCode, modifiers: settings.hotKeyModifiers)
+        observeHotKeyChanges()
+    }
+
+    private func observeHotKeyChanges() {
+        withObservationTracking {
+            _ = settings.hotKeyCode
+            _ = settings.hotKeyModifiers
+        } onChange: { [weak self] in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                HotKeyManager.shared.register(
+                    keyCode: self.settings.hotKeyCode,
+                    modifiers: self.settings.hotKeyModifiers
+                )
+                self.observeHotKeyChanges()
+            }
+        }
     }
 
     private func observeContentChanges() {

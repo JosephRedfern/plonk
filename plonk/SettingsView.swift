@@ -1,3 +1,4 @@
+import Carbon
 import SwiftUI
 import ServiceManagement
 import Sparkle
@@ -7,6 +8,8 @@ struct SettingsView: View {
     var pythonManager: PythonManager
     @Bindable var updater: UpdaterManager
     @State private var launchAtLogin: Bool = SMAppService.mainApp.status == .enabled
+    @State private var isRecordingHotKey = false
+    @State private var hotKeyMonitor: Any?
 
     var body: some View {
         Form {
@@ -81,11 +84,19 @@ struct SettingsView: View {
                 HStack {
                     Text("Toggle Plonk:")
                     Spacer()
-                    Text("⌃⌥ Space")
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(.quaternary)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                    Button {
+                        if isRecordingHotKey { stopRecordingHotKey() } else { startRecordingHotKey() }
+                    } label: {
+                        Text(isRecordingHotKey ? "Press shortcut…" : settings.hotKeyDisplay)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(isRecordingHotKey ? Color.accentColor.opacity(0.25) : Color.gray.opacity(0.18))
+                            )
+                            .foregroundStyle(.primary)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
 
@@ -135,6 +146,81 @@ struct SettingsView: View {
         }
         .onDisappear {
             NSApp.setActivationPolicy(.accessory)
+            stopRecordingHotKey()
         }
+    }
+
+    private func startRecordingHotKey() {
+        isRecordingHotKey = true
+        HotKeyManager.shared.unregister()
+        hotKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            handleRecordedKey(event)
+            return nil
+        }
+    }
+
+    private func stopRecordingHotKey() {
+        if let monitor = hotKeyMonitor {
+            NSEvent.removeMonitor(monitor)
+            hotKeyMonitor = nil
+        }
+        isRecordingHotKey = false
+        HotKeyManager.shared.register(keyCode: settings.hotKeyCode, modifiers: settings.hotKeyModifiers)
+    }
+
+    private func handleRecordedKey(_ event: NSEvent) {
+        if event.keyCode == 53 { // Escape — cancel
+            stopRecordingHotKey()
+            return
+        }
+        let flags = event.modifierFlags
+        var mods: UInt32 = 0
+        if flags.contains(.control) { mods |= UInt32(controlKey) }
+        if flags.contains(.option)  { mods |= UInt32(optionKey) }
+        if flags.contains(.command) { mods |= UInt32(cmdKey) }
+        if flags.contains(.shift)   { mods |= UInt32(shiftKey) }
+        guard mods != 0 else { return } // require at least one modifier
+        let kc = UInt32(event.keyCode)
+        let chars = event.charactersIgnoringModifiers ?? ""
+        settings.hotKeyCode = kc
+        settings.hotKeyModifiers = mods
+        settings.hotKeyDisplay = formatShortcut(keyCode: kc, modifiers: mods, fallback: chars)
+        stopRecordingHotKey()
+    }
+}
+
+fileprivate func formatShortcut(keyCode: UInt32, modifiers: UInt32, fallback: String) -> String {
+    var prefix = ""
+    if modifiers & UInt32(controlKey) != 0 { prefix += "⌃" }
+    if modifiers & UInt32(optionKey)  != 0 { prefix += "⌥" }
+    if modifiers & UInt32(shiftKey)   != 0 { prefix += "⇧" }
+    if modifiers & UInt32(cmdKey)     != 0 { prefix += "⌘" }
+    return prefix + " " + keyName(for: keyCode, fallback: fallback)
+}
+
+fileprivate func keyName(for keyCode: UInt32, fallback: String) -> String {
+    switch keyCode {
+    case 49:  return "Space"
+    case 36:  return "Return"
+    case 48:  return "Tab"
+    case 51:  return "Delete"
+    case 53:  return "Escape"
+    case 123: return "←"
+    case 124: return "→"
+    case 125: return "↓"
+    case 126: return "↑"
+    case 122: return "F1"
+    case 120: return "F2"
+    case 99:  return "F3"
+    case 118: return "F4"
+    case 96:  return "F5"
+    case 97:  return "F6"
+    case 98:  return "F7"
+    case 100: return "F8"
+    case 101: return "F9"
+    case 109: return "F10"
+    case 103: return "F11"
+    case 111: return "F12"
+    default:  return fallback.uppercased()
     }
 }
