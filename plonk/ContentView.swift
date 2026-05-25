@@ -117,7 +117,7 @@ struct ContentView: View {
         case "%clear":
             pythonManager.clearHistory()
         case "%reset":
-            pythonManager.reset(pythonPath: settings.pythonPath, bootstrap: settings.bootstrapScript)
+            pythonManager.reset(pythonPath: settings.effectivePythonPath, bootstrap: settings.bootstrapScript, projectDir: settings.effectiveProjectDir)
         case "%copy":
             copyToClipboard(pythonManager.history.first?.output ?? "")
         case let cmd where cmd.hasPrefix("%copy "):

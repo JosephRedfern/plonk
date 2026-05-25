@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCHEME="plonk"
-PROJECT="plonk.xcodeproj"
-APP_NAME="plonk"
+SCHEME="Plonk"
+PROJECT="Plonk.xcodeproj"
+APP_NAME="Plonk"
 TEAM_ID="V2CW6Y3N5J"
 NOTARY_PROFILE="${PLONK_NOTARY_PROFILE:-plonk-notary}"
 

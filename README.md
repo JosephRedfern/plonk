@@ -1,10 +1,10 @@
-# plonk
+# Plonk
 
 A Spotlight-style floating Python REPL for macOS. Hit a hotkey, get a Python prompt anywhere.
 
 ## What it does
 
-plonk lives in your menu bar and pops up a floating REPL panel on a global hotkey. Behind the scenes it runs a long-lived Python interpreter subprocess, so state (variables, imports) persists between commands until you reset it.
+Plonk lives in your menu bar and pops up a floating REPL panel on a global hotkey. Behind the scenes it runs a long-lived Python interpreter subprocess, so state (variables, imports) persists between commands until you reset it.
 
 ## Usage
 
@@ -33,7 +33,7 @@ plonk lives in your menu bar and pops up a floating REPL panel on a global hotke
 
 Open from the menu bar icon → Settings.
 
-- **Python Interpreter:** path to the `python3` binary you want to use. plonk auto-detects a parent virtualenv (looks upward for a `pyvenv.cfg`) and sets `VIRTUAL_ENV` / `PATH` accordingly.
+- **Python Interpreter:** path to the `python3` binary you want to use. Plonk auto-detects a parent virtualenv (looks upward for a `pyvenv.cfg`) and sets `VIRTUAL_ENV` / `PATH` accordingly.
 - **Bootstrap Script:** Python code that runs on interpreter startup. Useful for default imports.
 - **Restart Interpreter:** kill and relaunch the subprocess with the current settings.
 
@@ -51,11 +51,11 @@ The app sandbox is **disabled** — required for the global hotkey and for spawn
 
 ## Building
 
-Open `plonk.xcodeproj` in Xcode and build. Requires macOS 14+ (uses `@Observable`, `MenuBarExtra`, etc.).
+Open `Plonk.xcodeproj` in Xcode and build. Requires macOS 14+ (uses `@Observable`, `MenuBarExtra`, etc.).
 
 ## Releasing
 
-`release.sh` runs archive → sign → notarize → staple → DMG in one shot. Output lands in `build/plonk.dmg`.
+`release.sh` runs archive → sign → notarize → staple → DMG in one shot. Output lands in `build/Plonk.dmg`.
 
 One-time setup:
 

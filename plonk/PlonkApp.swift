@@ -3,18 +3,18 @@ import Carbon
 import Observation
 
 @main
-struct plonkApp: App {
+struct PlonkApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
         MenuBarExtra {
-            Button("Show plonk") {
+            Button("Show Plonk") {
                 appDelegate.togglePanel()
             }
             Divider()
             SettingsLink()
             Divider()
-            Button("Quit plonk") {
+            Button("Quit Plonk") {
                 NSApp.terminate(nil)
             }
         } label: {
@@ -22,7 +22,7 @@ struct plonkApp: App {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 16, height: 16)
-                .accessibilityLabel("plonk")
+                .accessibilityLabel("Plonk")
         }
         Settings {
             SettingsView(settings: appDelegate.settings, pythonManager: appDelegate.pythonManager)
@@ -43,7 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupPanel()
         setupHotKey()
         observeContentChanges()
-        pythonManager.start(pythonPath: settings.pythonPath, bootstrap: settings.bootstrapScript)
+        pythonManager.start(pythonPath: settings.effectivePythonPath, bootstrap: settings.bootstrapScript, projectDir: settings.effectiveProjectDir)
     }
 
     private func setupPanel() {

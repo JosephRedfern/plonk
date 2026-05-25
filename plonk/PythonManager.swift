@@ -37,6 +37,18 @@ final class PythonManager {
         return nil
     }
 
+    static func findVenvIn(projectDir: String) -> String? {
+        guard !projectDir.isEmpty else { return nil }
+        for name in [".venv", "venv", "env"] {
+            let candidate = (projectDir as NSString).appendingPathComponent(name)
+            let cfg = (candidate as NSString).appendingPathComponent("pyvenv.cfg")
+            if FileManager.default.fileExists(atPath: cfg) {
+                return candidate
+            }
+        }
+        return nil
+    }
+
     private static func userShellEnvironment() -> [String: String] {
         var env = ProcessInfo.processInfo.environment
         let shell = env["SHELL"] ?? "/bin/zsh"
@@ -60,13 +72,16 @@ final class PythonManager {
         return env
     }
 
-    func start(pythonPath: String, bootstrap: String) {
+    func start(pythonPath: String, bootstrap: String, projectDir: String = "") {
         stop()
         lastError = nil
 
-        guard FileManager.default.isExecutableFile(atPath: pythonPath) else {
-            lastError = "Python not found at \(pythonPath)"
-            return
+        let useEnvFallback = pythonPath.isEmpty
+        if !useEnvFallback {
+            guard FileManager.default.isExecutableFile(atPath: pythonPath) else {
+                lastError = "Python not found at \(pythonPath)"
+                return
+            }
         }
 
         let scriptURL = FileManager.default.temporaryDirectory
@@ -79,9 +94,14 @@ final class PythonManager {
         }
 
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: pythonPath)
-
-        var args = ["-u", scriptURL.path]
+        var args: [String]
+        if useEnvFallback {
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            args = ["python3", "-u", scriptURL.path]
+        } else {
+            process.executableURL = URL(fileURLWithPath: pythonPath)
+            args = ["-u", scriptURL.path]
+        }
         if !bootstrap.isEmpty {
             let bootstrapURL = FileManager.default.temporaryDirectory
                 .appendingPathComponent("plonk_bootstrap.py")
@@ -91,7 +111,14 @@ final class PythonManager {
         process.arguments = args
 
         var env = Self.userShellEnvironment()
-        if let venvDir = Self.detectVenv(pythonPath: pythonPath) {
+        if !projectDir.isEmpty {
+            env["PLONK_PROJECT_DIR"] = projectDir
+            if let venvDir = Self.findVenvIn(projectDir: projectDir) {
+                let venvBin = (venvDir as NSString).appendingPathComponent("bin")
+                env["VIRTUAL_ENV"] = venvDir
+                env["PATH"] = venvBin + ":" + (env["PATH"] ?? "/usr/bin:/bin")
+            }
+        } else if let venvDir = Self.detectVenv(pythonPath: pythonPath) {
             let venvBin = (venvDir as NSString).appendingPathComponent("bin")
             env["VIRTUAL_ENV"] = venvDir
             env["PATH"] = venvBin + ":" + (env["PATH"] ?? "/usr/bin:/bin")
@@ -209,10 +236,10 @@ final class PythonManager {
         history.removeAll()
     }
 
-    func reset(pythonPath: String, bootstrap: String) {
+    func reset(pythonPath: String, bootstrap: String, projectDir: String = "") {
         stop()
         history.removeAll()
-        start(pythonPath: pythonPath, bootstrap: bootstrap)
+        start(pythonPath: pythonPath, bootstrap: bootstrap, projectDir: projectDir)
     }
 
     private static func readUntilMarker(from handle: FileHandle, marker: String) -> String {
