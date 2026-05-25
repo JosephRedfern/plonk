@@ -129,5 +129,12 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 540, height: 640)
+        .onAppear {
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        .onDisappear {
+            NSApp.setActivationPolicy(.accessory)
+        }
     }
 }
